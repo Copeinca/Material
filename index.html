@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Materiales SAP</title>
+  <style>
+    /* Reset de estilo básico */
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+    }
+
+    /* Cabecera con el logo de Copeinca */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #00bcd4; /* Azul */
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    header h1 {
+      display: flex;
+      align-items: center;
+      font-size: 1.4em;
+      margin: 0;
+    }
+
+    header img {
+      height: 28px;
+      margin-right: 10px;
+      border-radius: 50%;
+    }
+
+    /* Estilos para los botones y entradas */
+    input, select, button {
+      font-size: 16px;
+      padding: 12px;
+      margin: 10px 5px 5px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      background-color: #ffffff;
+    }
+
+    button {
+      background-color: #1976d2; /* Azul */
+      color: white;
+      cursor: pointer;
+      border: none;
+    }
+
+    button:hover {
+      background-color: #1565c0;
+    }
+
+    /* Estilo de la lista de sugerencias */
+    ul {
+      list-style: none;
+      padding: 0;
+      max-height: 250px;
+      overflow-y: auto;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
+    li {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+
+    li:hover {
+      background: #e3f2fd;
+    }
+
+    /* Estilos de la tabla */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #00bcd4; /* Azul */
+      color: white;
+    }
+
+    /* Estilos para los dispositivos móviles */
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 1.2em; /* Reducir tamaño del título */
+      }
+
+      /* Diseño de tabla para móviles */
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      td {
+        border: none;
+        position: relative;
+        padding-left: 50%;
+        text-align: right;
+      }
+
+      td::before {
+        position: absolute;
+        left: 10px;
+        top: 12px;
+        white-space: nowrap;
+        font-weight: bold;
+      }
+
+      td:nth-child(1)::before { content: "Código"; }
+      td:nth-child(2)::before { content: "Texto Breve"; }
+      td:nth-child(3)::before { content: "Descripción"; }
+      td:nth-child(4)::before { content: "UM"; }
+      td:nth-child(5)::before { content: "Cantidad"; }
+      td:nth-child(6)::before { content: "Eliminar"; }
+
+      /* Ajuste de botones y entradas */
+      input, select, button {
+        width: 100%;
+        box-sizing: border-box;
+        margin: 5px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>
+      <img src="https://ebiz.pe/wp-content/uploads/sites/5/2024/07/Logos-Copeinca-04-1-1.jpg" alt="C Copeinca" style="height: 28px;">
+      Materiales SAP
+      <img src="https://library.urnerbarry.com/Images/Cooke_Logo_3.jpg" alt="Cooke" style="height: 20px; margin-left: 10px;">
+    </h1>
+  </header>
+
+  <input type="text" id="busqueda" placeholder="Buscar material... Ej: *manguera*r12*" size="50">
+  <ul id="sugerencias"></ul>
+
+  <table id="carrito">
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>Texto Breve</th>
+        <th>Descripción</th>
+        <th>UM</th>
+        <th>Cantidad</th>
+        <th>Eliminar</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div style="margin-top: 15px;">
+    <button onclick="exportarExcel()">📄 Exportar a Excel</button>
+    <button onclick="limpiarCarrito()">🧹 Limpiar</button>
+  </div>
+
+  <div style="margin-top: 20px;">
+    <label for="destinatario">Enviar a:</label>
+    <select id="destinatario">
+      <option value="">Seleccionar destinatario</option>
+      <option value="FCoronado@copeinca.com.pe">Felipe Coronado</option>
+      <option value="iascate@copeinca.com.pe">Ivan Ascate</option>
+      <option value="CGarciaD@copeinca.com.pe">Carlos Garcia Durand</option>
+      <option value="rdominguez@copeinca.com.pe">Ronald Dominguez</option>
+      <option value="JMechato@copeinca.com.pe">Justo Mechato</option>
+      <option value="jchuchullo@copeinca.com.pe">Jose Chuchullo</option>
+    </select>
+    <button onclick="enviarCorreo()">📧 Enviar por correo</button>
+  </div>
+
+  <script>
+    let productosBase = [];
+    const carrito = [];
+
+    async function cargarBase() {
+      const res = await fetch('base_completa_carrito.json');
+      productosBase = await res.json();
+    }
+
+    function agregarAlCarrito(prod) {
+      const yaExiste = carrito.find(p => p.Codigo === prod.Codigo);
+      if (yaExiste) return;
+
+      const fila = document.createElement("tr");
+      fila.innerHTML = `
+        <td>${prod.Codigo}</td>
+        <td>${prod.TextoBreve ?? ""}</td>
+        <td>${prod.DescripcionLarga ?? ""}</td>
+        <td>${prod.UM ?? ""}</td>
+        <td><input type="number" value="1" min="1" style="width:60px;"></td>
+        <td><button onclick="this.closest('tr').remove(); carrito.splice(carrito.indexOf(prod), 1);">❌</button></td>
+      `;
+      document.querySelector("#carrito tbody").appendChild(fila);
+      carrito.push(prod);
+    }
+
+    function limpiarCarrito() {
+      document.querySelector("#carrito tbody").innerHTML = "";
+      carrito.length = 0;
+    }
+
+    function exportarExcel() {
+      const datos = [["Código", "Texto Breve", "Descripción", "UM", "Cantidad"]];
+
+      document.querySelectorAll("#carrito tbody tr").forEach(tr => {
+        const tds = tr.querySelectorAll("td");
+        const cantidad = tr.querySelector("input").value;
+        datos.push([
+          tds[0].innerText,
+          tds[1].innerText,
+          tds[2].innerText,
+          tds[3].innerText,
+          cantidad
+        ]);
+      });
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(datos);
+      XLSX.utils.book_append_sheet(wb, ws, "MATERIALES SAP");
+      XLSX.writeFile(wb, "Materiales_SAP.xlsx");
+    }
+
+    function enviarCorreo() {
+      const destinatario = document.getElementById("destinatario").value;
+      if (!destinatario) {
+        alert("Por favor selecciona un destinatario.");
+        return;
+      }
+
+      const asunto = encodeURIComponent("Solicitud de Materiales SAP");
+      const cuerpo = encodeURIComponent("Buenas Ing,\n\nAdjunto lista de materiales SAP para tu revisión.\n\nSaludos,\n");
+      window.location.href = `mailto:${destinatario}?subject=${asunto}&body=${cuerpo}`;
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      await cargarBase();
+
+      const inputBusqueda = document.getElementById("busqueda");
+      const ulSugerencias = document.getElementById("sugerencias");
+
+      inputBusqueda.addEventListener("input", function () {
+        const texto = this.value.trim().toLowerCase();
+        ulSugerencias.innerHTML = "";
+        if (texto.length < 2) return;
+
+        const palabras = texto.replace(/\*/g, ".*").split(/\s+/);
+        const regex = new RegExp(palabras.join(".*"), "i");
+
+        const resultados = productosBase.filter(p => {
+          const cadena = `${p.Codigo} ${p.TextoBreve ?? ""} ${p.DescripcionLarga ?? ""}`.toLowerCase();
+          return regex.test(cadena);
+        }).slice(0, 30);
+
+        resultados.forEach(prod => {
+          const li = document.createElement("li");
+          li.textContent = `${prod.TextoBreve} (${prod.Codigo})`;
+          li.onclick = () => {
+            agregarAlCarrito(prod);
+            inputBusqueda.value = "";
+            ulSugerencias.innerHTML = "";
+          };
+          ulSugerencias.appendChild(li);
+        });
+      });
+    });
+  </script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</body>
+</html>
