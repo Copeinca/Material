@@ -30,15 +30,15 @@
       margin: 0;
     }
 
-    header img {
+    header img.logo-copeinca {
       height: 28px;
       margin-right: 10px;
       border-radius: 50%;
     }
 
-    .logo-derecha {
-      height: 40px;
-      border-radius: 5px;
+    header img.logo-cooke {
+      height: 30px;
+      margin-left: 10px;
     }
 
     input, select, button {
@@ -143,11 +143,8 @@
 </head>
 <body>
   <header>
-    <h1>
-      <img src="https://ebiz.pe/wp-content/uploads/sites/5/2024/07/Logos-Copeinca-04-1-1.jpg" alt="C Copeinca">
-      Materiales SAP
-    </h1>
-    <img src="https://library.urnerbarry.com/Images/Cooke_Logo_3.jpg" alt="Cooke" class="logo-derecha">
+    <h1><img src="https://ebiz.pe/wp-content/uploads/sites/5/2024/07/Logos-Copeinca-04-1-1.jpg" alt="C Copeinca" class="logo-copeinca">Materiales SAP</h1>
+    <img src="https://library.urnerbarry.com/Images/Cooke_Logo_3.jpg" alt="Cooke" class="logo-cooke">
   </header>
 
   <input type="text" id="busqueda" placeholder="Buscar material... Ej: *manguera*r12*" size="50">
@@ -169,7 +166,7 @@
 
   <div style="margin-top: 15px;">
     <button onclick="exportarExcel()">📄 Exportar a Excel</button>
-    <button onclick="limpiarCarrito()">🗑️ Limpiar</button>
+    <button onclick="limpiarCarrito()">🧹 Limpiar</button>
   </div>
 
   <div style="margin-top: 20px;">
@@ -179,7 +176,7 @@
       <option value="FCoronado@copeinca.com.pe">Felipe Coronado</option>
       <option value="iascate@copeinca.com.pe">Ivan Ascate</option>
       <option value="CGarciaD@copeinca.com.pe">Carlos Garcia Durand</option>
-      <option value="rdominguez@copeinca.com.pe">Ronald Dominguez</option>
+      <option value="rdominguez@copeinca.com.pe">Ronald Valdelomar</option>
       <option value="JMechato@copeinca.com.pe">Justo Mechato</option>
       <option value="jchuchullo@copeinca.com.pe">Jose Chuchullo</option>
     </select>
@@ -189,6 +186,7 @@
   <script>
     let productosBase = [];
     const carrito = [];
+    let nombreEmbarcacion = "";
 
     async function cargarBase() {
       const res = await fetch('base_completa_carrito.json');
@@ -218,19 +216,7 @@
     }
 
     function exportarExcel() {
-      const embarcacion = prompt("¿Nombre de la Embarcación para el Excel? (máx. 15 caracteres)");
-      if (embarcacion === null) return;
-
-      const nombre = embarcacion.trim().substring(0, 15);
-      const datos = [];
-
-      if (nombre) {
-        datos.push([`EMBARCACIÓN: ${nombre}`]);
-        datos.push([]);
-      }
-
-      datos.push(["Código", "Texto Breve", "Descripción", "UM", "Cantidad"]);
-
+      const datos = [["Código", "Texto Breve", "Descripción", "UM", "Cantidad"]];
       document.querySelectorAll("#carrito tbody tr").forEach(tr => {
         const tds = tr.querySelectorAll("td");
         const cantidad = tr.querySelector("input").value;
@@ -246,7 +232,9 @@
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(datos);
       XLSX.utils.book_append_sheet(wb, ws, "MATERIALES SAP");
-      XLSX.writeFile(wb, `Materiales_SAP_${nombre}.xlsx`);
+      const nombre = nombreEmbarcacion ? `_${nombreEmbarcacion}` : "";
+      const fechaHora = new Date().toISOString().slice(0, 16).replace("T", "_").replace(":", "-");
+      XLSX.writeFile(wb, `Materiales_SAP${nombre}_${fechaHora}.xlsx`);
     }
 
     function enviarCorreo() {
@@ -258,10 +246,20 @@
 
       const embarcacion = prompt("¿Nombre de la Embarcación para el correo? (máx. 15 caracteres)");
       if (embarcacion === null) return;
+      nombreEmbarcacion = embarcacion.trim().substring(0, 15);
 
-      const nombre = embarcacion.trim().substring(0, 15);
-      const asunto = encodeURIComponent(`Solicitud de Materiales SAP - ${nombre}`);
-      const cuerpo = encodeURIComponent("Buenas Ing,\n\nAdjunto lista de materiales SAP para tu revisión.\n\nSaludos,\n");
+      const ahora = new Date();
+      const hora = ahora.getHours();
+      let saludo = "Buenas noches Ing,";
+
+      if (hora >= 6 && hora < 12) {
+        saludo = "Buenos días Ing,";
+      } else if (hora >= 12 && hora < 18) {
+        saludo = "Buenas tardes Ing,";
+      }
+
+      const asunto = encodeURIComponent(`Solicitud de Materiales SAP - ${nombreEmbarcacion}`);
+      const cuerpo = encodeURIComponent(`${saludo}\n\nAdjunto lista de materiales SAP para tu revisión.\n\nSaludos,\n`);
       window.location.href = `mailto:${destinatario}?subject=${asunto}&body=${cuerpo}`;
     }
 
