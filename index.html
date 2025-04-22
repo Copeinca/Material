@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Materiales SAP</title>
   <style>
-    /* Reset de estilo básico */
     body {
       font-family: 'Segoe UI', sans-serif;
       background: #f9f9f9;
@@ -13,12 +12,11 @@
       padding: 20px;
     }
 
-    /* Cabecera con el logo de Copeinca */
     header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: #00bcd4; /* Azul */
+      background: #00bcd4;
       color: white;
       padding: 10px 20px;
       border-radius: 8px;
@@ -38,7 +36,11 @@
       border-radius: 50%;
     }
 
-    /* Estilos para los botones y entradas */
+    .logo-derecha {
+      height: 40px;
+      border-radius: 5px;
+    }
+
     input, select, button {
       font-size: 16px;
       padding: 12px;
@@ -49,7 +51,7 @@
     }
 
     button {
-      background-color: #1976d2; /* Azul */
+      background-color: #1976d2;
       color: white;
       cursor: pointer;
       border: none;
@@ -59,7 +61,6 @@
       background-color: #1565c0;
     }
 
-    /* Estilo de la lista de sugerencias */
     ul {
       list-style: none;
       padding: 0;
@@ -81,7 +82,6 @@
       background: #e3f2fd;
     }
 
-    /* Estilos de la tabla */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -98,17 +98,15 @@
     }
 
     th {
-      background-color: #00bcd4; /* Azul */
+      background-color: #00bcd4;
       color: white;
     }
 
-    /* Estilos para los dispositivos móviles */
     @media (max-width: 600px) {
       header h1 {
-        font-size: 1.2em; /* Reducir tamaño del título */
+        font-size: 1.2em;
       }
 
-      /* Diseño de tabla para móviles */
       table, thead, tbody, th, td, tr {
         display: block;
       }
@@ -135,7 +133,6 @@
       td:nth-child(5)::before { content: "Cantidad"; }
       td:nth-child(6)::before { content: "Eliminar"; }
 
-      /* Ajuste de botones y entradas */
       input, select, button {
         width: 100%;
         box-sizing: border-box;
@@ -147,10 +144,10 @@
 <body>
   <header>
     <h1>
-      <img src="https://ebiz.pe/wp-content/uploads/sites/5/2024/07/Logos-Copeinca-04-1-1.jpg" alt="C Copeinca" style="height: 28px;">
+      <img src="https://ebiz.pe/wp-content/uploads/sites/5/2024/07/Logos-Copeinca-04-1-1.jpg" alt="C Copeinca">
       Materiales SAP
-      <img src="https://library.urnerbarry.com/Images/Cooke_Logo_3.jpg" alt="Cooke" style="height: 20px; margin-left: 10px;">
     </h1>
+    <img src="https://library.urnerbarry.com/Images/Cooke_Logo_3.jpg" alt="Cooke" class="logo-derecha">
   </header>
 
   <input type="text" id="busqueda" placeholder="Buscar material... Ej: *manguera*r12*" size="50">
@@ -182,7 +179,7 @@
       <option value="FCoronado@copeinca.com.pe">Felipe Coronado</option>
       <option value="iascate@copeinca.com.pe">Ivan Ascate</option>
       <option value="CGarciaD@copeinca.com.pe">Carlos Garcia Durand</option>
-      <option value="rdominguez@copeinca.com.pe">Ronald Dominguez</option>
+      <option value="rdominguez@copeinca.com.pe">Ronald Valdelomar</option>
       <option value="JMechato@copeinca.com.pe">Justo Mechato</option>
       <option value="jchuchullo@copeinca.com.pe">Jose Chuchullo</option>
     </select>
@@ -221,7 +218,18 @@
     }
 
     function exportarExcel() {
-      const datos = [["Código", "Texto Breve", "Descripción", "UM", "Cantidad"]];
+      const embarcacion = prompt("¿Nombre de la Embarcación para el Excel? (máx. 15 caracteres)");
+      if (embarcacion === null) return;
+
+      const nombre = embarcacion.trim().substring(0, 15);
+      const datos = [];
+
+      if (nombre) {
+        datos.push([`EMBARCACIÓN: ${nombre}`]);
+        datos.push([]);
+      }
+
+      datos.push(["Código", "Texto Breve", "Descripción", "UM", "Cantidad"]);
 
       document.querySelectorAll("#carrito tbody tr").forEach(tr => {
         const tds = tr.querySelectorAll("td");
@@ -238,7 +246,7 @@
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(datos);
       XLSX.utils.book_append_sheet(wb, ws, "MATERIALES SAP");
-      XLSX.writeFile(wb, "Materiales_SAP.xlsx");
+      XLSX.writeFile(wb, `Materiales_SAP_${nombre}.xlsx`);
     }
 
     function enviarCorreo() {
@@ -248,7 +256,11 @@
         return;
       }
 
-      const asunto = encodeURIComponent("Solicitud de Materiales SAP");
+      const embarcacion = prompt("¿Nombre de la Embarcación para el correo? (máx. 15 caracteres)");
+      if (embarcacion === null) return;
+
+      const nombre = embarcacion.trim().substring(0, 15);
+      const asunto = encodeURIComponent(`Solicitud de Materiales SAP - ${nombre}`);
       const cuerpo = encodeURIComponent("Buenas Ing,\n\nAdjunto lista de materiales SAP para tu revisión.\n\nSaludos,\n");
       window.location.href = `mailto:${destinatario}?subject=${asunto}&body=${cuerpo}`;
     }
