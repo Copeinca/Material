@@ -36,7 +36,7 @@
       border-radius: 50%;
     }
 
-    .logo-derecha {
+    #logo-derecha {
       height: 28px;
       margin-left: 10px;
     }
@@ -146,8 +146,8 @@
     <h1>
       <img src="https://ebiz.pe/wp-content/uploads/sites/5/2024/07/Logos-Copeinca-04-1-1.jpg" alt="C Copeinca">
       Materiales SAP
+      <img id="logo-derecha" src="https://library.urnerbarry.com/Images/Cooke_Logo_3.jpg" alt="Cooke Logo">
     </h1>
-    <img src="https://library.urnerbarry.com/Images/Cooke_Logo_3.jpg" alt="Cooke Logo" class="logo-derecha">
   </header>
 
   <input type="text" id="busqueda" placeholder="Buscar material... Ej: *manguera*r12*" size="50">
@@ -169,7 +169,7 @@
 
   <div style="margin-top: 15px;">
     <button onclick="exportarExcel()">📄 Exportar a Excel</button>
-    <button onclick="limpiarCarrito()">🗑️ Limpiar</button>
+    <button onclick="limpiarCarrito()">🧹 Limpiar</button>
   </div>
 
   <div style="margin-top: 20px;">
@@ -186,6 +186,7 @@
     <button onclick="enviarCorreo()">📧 Enviar por correo</button>
   </div>
 
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script>
     let productosBase = [];
     const carrito = [];
@@ -197,8 +198,7 @@
     }
 
     function agregarAlCarrito(prod) {
-      const yaExiste = carrito.find(p => p.Codigo === prod.Codigo);
-      if (yaExiste) return;
+      if (carrito.find(p => p.Codigo === prod.Codigo)) return;
 
       const fila = document.createElement("tr");
       fila.innerHTML = `
@@ -218,15 +218,11 @@
       carrito.length = 0;
     }
 
-    function getSaludo() {
-      const hora = new Date().getHours();
-      if (hora >= 6 && hora < 12) return "Buenos días Ing,";
-      if (hora >= 12 && hora < 18) return "Buenas tardes Ing,";
-      return "Buenas noches Ing,";
-    }
-
     function exportarExcel() {
-      const datos = [["Embarcación:", nombreEmbarcacion], [], ["Código", "Texto Breve", "Descripción", "UM", "Cantidad"]];
+      if (!nombreEmbarcacion) {
+        nombreEmbarcacion = prompt("¿Nombre de embarcación? (máx. 15 caracteres):", "").substring(0, 15);
+      }
+      const datos = [["Embarcación", nombreEmbarcacion], [], ["Código", "Texto Breve", "Descripción", "UM", "Cantidad"]];
       document.querySelectorAll("#carrito tbody tr").forEach(tr => {
         const tds = tr.querySelectorAll("td");
         const cantidad = tr.querySelector("input").value;
@@ -242,11 +238,10 @@
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(datos);
 
-      // Ajustar el ancho de columna B
-      ws['!cols'] = [{}, { wch: 40 }];
+      ws['!cols'] = [{ wch: 15 }, { wch: 40 }, { wch: 40 }, { wch: 10 }, { wch: 10 }];
 
       XLSX.utils.book_append_sheet(wb, ws, "MATERIALES SAP");
-      XLSX.writeFile(wb, "Materiales_SAP.xlsx");
+      XLSX.writeFile(wb, `Materiales_SAP_${nombreEmbarcacion}.xlsx`);
     }
 
     function enviarCorreo() {
@@ -256,17 +251,23 @@
         return;
       }
 
-      nombreEmbarcacion = prompt("¿Embarcación? (máx. 15 caracteres)", "").substring(0, 15) || "";
+      if (!nombreEmbarcacion) {
+        nombreEmbarcacion = prompt("¿Nombre de embarcación? (máx. 15 caracteres):", "").substring(0, 15);
+      }
 
-      const saludo = getSaludo();
+      const ahora = new Date();
+      const hora = ahora.getHours();
+      let saludo = "Buenas noches Ing,";
+      if (hora >= 6 && hora < 12) saludo = "Buenos días Ing,";
+      else if (hora >= 12 && hora < 18) saludo = "Buenas tardes Ing,";
+
       const asunto = encodeURIComponent(`Solicitud de Materiales SAP - ${nombreEmbarcacion}`);
-      const cuerpo = encodeURIComponent(`${saludo}\n\nAdjunto lista de materiales SAP para tu revisión.\n\nSaludos,\n`);
+      const cuerpo = encodeURIComponent(`${saludo}\n\nAdjunto lista de materiales SAP para su revisión.\n\nSaludos,\n`);
       window.location.href = `mailto:${destinatario}?subject=${asunto}&body=${cuerpo}`;
     }
 
     document.addEventListener("DOMContentLoaded", async () => {
       await cargarBase();
-
       const inputBusqueda = document.getElementById("busqueda");
       const ulSugerencias = document.getElementById("sugerencias");
 
@@ -275,8 +276,7 @@
         ulSugerencias.innerHTML = "";
         if (texto.length < 2) return;
 
-        const palabras = texto.replace(/\*/g, ".*").split(/\s+/);
-        const regex = new RegExp(palabras.join(".*"), "i");
+        const regex = new RegExp(texto.replace(/\*/g, ".*"), "i");
 
         const resultados = productosBase.filter(p => {
           const cadena = `${p.Codigo} ${p.TextoBreve ?? ""} ${p.DescripcionLarga ?? ""}`.toLowerCase();
@@ -296,6 +296,5 @@
       });
     });
   </script>
-  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </body>
 </html>
