@@ -169,7 +169,7 @@
 
   <div style="margin-top: 15px;">
     <button onclick="exportarExcel()">📄 Exportar a Excel</button>
-    <button onclick="limpiarCarrito()">🧹 Limpiar</button>
+    <button onclick="limpiarCarrito()">🗑️ Limpiar</button>
   </div>
 
   <div style="margin-top: 20px;">
@@ -222,7 +222,7 @@
       if (!nombreEmbarcacion) {
         nombreEmbarcacion = prompt("¿Nombre de embarcación? (máx. 15 caracteres):", "").substring(0, 15);
       }
-      const datos = [["Embarcación", nombreEmbarcacion], [], ["Código", "Texto Breve", "Descripción", "UM", "Cantidad"]];
+      const datos = [[],["Embarcación:", nombreEmbarcacion], [], ["Código", "Texto Breve", "Descripción", "UM", "Cantidad"]];
       document.querySelectorAll("#carrito tbody tr").forEach(tr => {
         const tds = tr.querySelectorAll("td");
         const cantidad = tr.querySelector("input").value;
@@ -238,7 +238,7 @@
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(datos);
 
-      ws['!cols'] = [{ wch: 15 }, { wch: 40 }, { wch: 40 }, { wch: 10 }, { wch: 10 }];
+      ws['!cols'] = [{ wch: 15 }, { wch: 40 }, { wch: 60 }, { wch: 10 }, { wch: 10 }];
 
       XLSX.utils.book_append_sheet(wb, ws, "MATERIALES SAP");
       XLSX.writeFile(wb, `Materiales_SAP_${nombreEmbarcacion}.xlsx`);
